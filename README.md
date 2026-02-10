@@ -10,6 +10,9 @@ key note:
     use recursion when right-combined.
 
 this is a typical top-down method.
+
+Actually there is another way of Recursive Descent Parsing that's more brute-force.
+Just try every pattern. if failed, try next pattern. But in this way, you'd need to consume a same token multiple times.
 ```
 
 2. Precedence Climbing
@@ -83,6 +86,40 @@ the key:
     the implementation of left/right-combined lies in (>= or >)
 
 Pratt Parse does not provide a decent syntax error detection.
+```
+
+In Addition:
+
+7. Earley Parsing
+
+```
+Earley Parsing is something really similiar to LR Parser.
+An earley parser have 3 actions: 
+    Predict    , corresponding to LR's closure,
+    Scan       , corresponding to LR's shift,
+    Completion , corresponding to LR's reduce.
+
+the difference consists in that an Earley Parser does not force it's user to make a choice when facing Shift-Reduce conflict,
+    Earley Parser do both, and undoubtedly, here's a trade-off between parsing capability and parsing speed.
+
+An Earley Parser can't be prebuilt with something like closure.
+Because in LR, the stack length is determined by your symbols, like "(E)" takes 3 position in your stack history.
+While in Earley Parser, the length of chart structure (an array that replaces the state stack) is determined by the inputing tokens,
+like "(E)" may actually be "(1+2)", then it would take 5 position in chart. So the state space is relevant to the length of your tokens, 
+then it can't be precompiled.
+
+So, how'd on earth a earley compiler work?
+Chart is a list of list, where len(chart) == len(tokens) (EOF sign included).
+And in the list of chart[i], it's recorded that some items are parsed to some extent,
+
+eg.
+    chart[5] = ("E","E+T",2,3)
+    means a Item of E -> E + T is parsed to Index 2 (or let's say E -> E + .T),
+    with its start at the 3rd token, and its end at 5th token.
+
+once this item is completed, the parser goes back to the start pos of this item (in this case, 3, in some implementation 3-1, depending on your way of indexing), and checks all the items in chart[3] that accepts a "E", adding a moved items to chart[complete_index+1] , and if they are complete, repeat this process.
+
+A gemini made demo is presented in EarleyDemo.py, for I'm too lazy to build another LR like parser. 
 ```
 
 Made for practice
