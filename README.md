@@ -120,6 +120,8 @@ eg.
 once this item is completed, the parser goes back to the start pos of this item (in this case, 3, in some implementation 3-1, depending on your way of indexing), and checks all the items in chart[3] that accepts a "E", adding a moved items to chart[complete_index+1] , and if they are complete, repeat this process.
 
 A gemini made demo is presented in EarleyDemo.py, for I'm too lazy to build another LR like parser. 
+
+one more thing, since Earley Parser accepts all the possible path of resolution, it's impossible to do the evaluation like LR-Parser with stack. Hence, you'd need to carry that state on the items!
 ```
 
 Made for practice
