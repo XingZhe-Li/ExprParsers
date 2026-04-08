@@ -81,6 +81,41 @@
 
 总体而言 LL Parser 还是比较全能的，而且手写递归解析 和 Precedence Climbing 其实也算是某种LL的变体，毕竟他们都是Top-Down 方法。
 
+补充：关于First Set、Follow Set、Select Set，`First Set`与`Follow Set`是比较常见的说法，`Select Set`相当于对于生成式的`First Set`，事实上，很多教材/教程就使用`First(A -> ...)`来表示`Select(A -> ...)`，其在效果上等效于`First(...) - epsilon + Follow(A)`（如果`First(...)`包含`epsilon`的话，如果不包含则就直接等于`First(...)`）。
+
+`Follow Set`的标准推导算法是对紧跟符号串添加`First`，如果能直接成为生成式的尾部，则再添加左式的`Follow Set`。我的偷懒做法是用`Follow Set`推导`Follow Set`，但这样的做法其实会有些问题，他会在一些标准做法认为"错误"的地方给出"正确"的回答：
+
+```
+具体说明：
+标准做法：
+A -> BCD
+Follow(B) = First(CD);
+if (First(CD) contains epsilon) {
+  Follow(B) -= {epsilon};
+  Follow(B) |= Follow(A);
+}
+
+我的偷懒做法：
+A -> BCD
+Follow(B) = First(C);
+if (First(C) contains epsilon) {
+  Follow(B) -= {epsilon};
+  Follow(B) |= Follow(C);
+}
+当然`Follow(D)`必须包含`Follow(A)`，
+这个偷懒写法不需要检查`CD`是否可以为空
+（如果D可以为空，那么`Follow(A)`会首先出现在`Follow(D)`中，进而如果`C`也可空，就会出现在`Follow(C)`里），
+不过和之前所说一样，可能会带入一些将"错误"认作是"正确"的情况。
+```
+
+其实这些内容都是很好理解的，直接从他们的意义出发即可：
+1. `First(X)`:`X`可能得到的第一个字
+2. `Follow(X)`:`X`屁股后面可能跟着的符号
+3. `Select(X->Y)`:当下一个符号在`Select(X->Y)`时且当前在展开`X`则选择这条生成式。
+
+关于一些表示的差异：
+一些表述中`First`集合中不能包含`epsilon`，转而使用`nullable set`来表示可空的非终结符，在`CS143`中`First`通常是对单个非终结符而言的，而广义上`First`也可以应用于字符串，甚至用于生成式（表示`Select Set`），这些差异无关紧要。`Follow Set`和`Select Set`在任何表述中都不包含`epsilon`，从他们的功能出发，这是显然的。
+
 ## What is LR Parser
 
 LR Parser通常分为四种，LR(0),SLR,LALR,LR(1)，他们的性能（不是说速度，而是解析能力）从弱到强也以此排列，这些区别主要由对冲突的处理能力引起。LR Parser的逻辑和LL Parser有所不同，LL Parser（如果带求值），会维护两个栈，一个符号栈，里面存的是未终止符号+语义行为，另一个数值栈，用于求值（语义行为的作用对象）。而LR Parser维护的两个栈（尚不考虑求值）存放的是状态（状态之所以要用栈是要保留历史，不然规约时没有参考对象，比如P->AB，则规约出B后还需要之前得到A的状态来进一步规约出B）和规约的符号，即到这个未知，这个Parser可能在解析什么内容。由于LR Parser的解析器结构中会存在两张表，一张ACTION表，用于表示碰到状态碰到终结符后做什么事情（移进还是规约），一张GOTO表，表示碰到非终结符后做什么事情（规约到什么状态）。
